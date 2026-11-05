@@ -1,6 +1,6 @@
 import { Client, type StompSubscription } from '@stomp/stompjs';
 import type { WsChatMessageEvent, WsConnectionStatus } from '../types/chat';
-import { clearAuthSession, getStoredToken, UNAUTHORIZED_EVENT } from './client';
+import { API_BASE_URL, clearAuthSession, getStoredToken, UNAUTHORIZED_EVENT } from './client';
 
 type StatusListener = (status: WsConnectionStatus) => void;
 type MessageEventListener = (event: WsChatMessageEvent) => void;
@@ -48,8 +48,18 @@ class WebSocketManager {
     this.connectionToken = token;
     this.setStatus('connecting');
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const brokerURL = `${protocol}//${window.location.host}/ws`;
+    let brokerURL: string;
+    const customWsUrl = import.meta.env.VITE_WS_URL;
+    if (customWsUrl) {
+      brokerURL = customWsUrl;
+    } else if (API_BASE_URL) {
+      const wsProtocol = API_BASE_URL.startsWith('https://') ? 'wss:' : 'ws:';
+      const hostPath = API_BASE_URL.replace(/^https?:\/\//, '');
+      brokerURL = `${wsProtocol}//${hostPath}/ws`;
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      brokerURL = `${protocol}//${window.location.host}/ws`;
+    }
 
     const client = new Client({
       brokerURL,

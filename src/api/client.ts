@@ -3,6 +3,8 @@ import type { AuthUser, ErrorResponse } from '../types/auth';
 const TOKEN_KEY = 'chatzun_token';
 const USERNAME_KEY = 'chatzun_username';
 
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 export function getStoredToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -41,9 +43,11 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     headers.set('Authorization', `Bearer ${requestToken}`);
   }
 
+  const url = API_BASE_URL ? `${API_BASE_URL}${endpoint}` : endpoint;
+
   let response: Response;
   try {
-    response = await fetch(endpoint, {
+    response = await fetch(url, {
       ...options,
       headers,
     });
